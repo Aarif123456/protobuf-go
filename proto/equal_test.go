@@ -224,6 +224,13 @@ func TestEqual(t *testing.T) {
 		// Editions scalars.
 		{
 			x: &testeditionspb.TestAllTypes{OptionalInt32: proto.Int32(1)},
+			y: &testeditionspb.TestAllTypes{OptionalInt64: proto.Int64(1)},
+		},
+		{
+			x: &testeditionspb.TestAllTypes{OptionalInt32: proto.Int32(1)},
+			y: &testeditionspb.TestAllTypes{OptionalInt64: proto.Int64(0)},
+		}, {
+			x: &testeditionspb.TestAllTypes{OptionalInt32: proto.Int32(1)},
 			y: &testeditionspb.TestAllTypes{OptionalInt32: proto.Int32(2)},
 		}, {
 			x: &testeditionspb.TestAllTypes{OptionalInt64: proto.Int64(1)},
@@ -997,8 +1004,15 @@ func TestEqual(t *testing.T) {
 		if !tt.eq && !proto.Equal(tt.y, tt.y) {
 			t.Errorf("Equal(y, y) = false, want true\n==== y ====\n%v", prototext.Format(tt.y))
 		}
-		if eq := proto.Equal(tt.x, tt.y); eq != tt.eq {
+
+		eq := proto.Equal(tt.x, tt.y)
+		if eq != tt.eq {
 			t.Errorf("Equal(x, y) = %v, want %v\n==== x ====\n%v==== y ====\n%v", eq, tt.eq, prototext.Format(tt.x), prototext.Format(tt.y))
+		}
+
+		cmp := proto.Compare(tt.x, tt.y)
+		if (cmp == 0) != eq {
+			t.Errorf("Compare(x, y) = %v, Equal(x, y) = %v\n==== x ====\n%v==== y ====\n%v", cmp, eq, prototext.Format(tt.x), prototext.Format(tt.y))
 		}
 	}
 }

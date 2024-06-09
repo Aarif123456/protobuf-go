@@ -142,6 +142,225 @@ func TestValueEqual(t *testing.T) {
 	}
 }
 
+func TestValueCompare(t *testing.T) {
+	tests := []struct {
+		x, y Value
+		want int
+	}{
+		{
+			x:    Value{},
+			y:    Value{},
+			want: 0,
+		},
+		{
+			x:    Value{},
+			y:    ValueOfBool(true),
+			want: -1,
+		},
+		{
+			x:    ValueOfBool(true),
+			y:    Value{},
+			want: 1,
+		},
+		{
+			x:    ValueOfBool(false),
+			y:    ValueOfBool(true),
+			want: -1,
+		},
+		{
+			x:    ValueOfBool(false),
+			y:    ValueOfBool(false),
+			want: 0,
+		},
+		{
+			x:    ValueOfBool(true),
+			y:    ValueOfBool(false),
+			want: 1,
+		},
+		{
+			x:    ValueOfBool(true),
+			y:    ValueOfBool(true),
+			want: 0,
+		},
+		{
+			x:    ValueOfInt32(1),
+			y:    ValueOfInt32(1),
+			want: 0,
+		},
+		{
+			x:    ValueOfInt32(2),
+			y:    ValueOfInt32(1),
+			want: 1,
+		},
+		{
+			x:    ValueOfInt32(1),
+			y:    ValueOfInt32(2),
+			want: -1,
+		},
+		{
+			x:    ValueOfInt64(1),
+			y:    ValueOfInt64(1),
+			want: 0,
+		},
+		{
+			x:    ValueOfInt64(1),
+			y:    ValueOfInt64(2),
+			want: -1,
+		},
+		{
+			x:    ValueOfInt64(2),
+			y:    ValueOfInt64(1),
+			want: 1,
+		},
+		{
+			x:    ValueOfFloat32(1.0),
+			y:    ValueOfFloat32(1.0),
+			want: 0,
+		},
+		{
+			x:    ValueOfFloat32(1.0),
+			y:    ValueOfFloat32(2.0),
+			want: -1,
+		},
+		{
+			x:    ValueOfFloat32(2.0),
+			y:    ValueOfFloat32(1.0),
+			want: 1,
+		},
+		{
+			x:    ValueOfFloat64(math.NaN()),
+			y:    ValueOfFloat64(math.NaN()),
+			want: 0,
+		},
+		{
+			x:    ValueOfFloat64(100),
+			y:    ValueOfFloat64(math.NaN()),
+			want: 1,
+		},
+		{
+			x:    ValueOfFloat64(math.NaN()),
+			y:    ValueOfFloat64(100),
+			want: -1,
+		},
+		{
+			x:    ValueOfFloat64(math.Inf(1)),
+			y:    ValueOfFloat64(math.Inf(1)),
+			want: 0,
+		},
+		{
+			x:    ValueOfFloat64(math.Inf(-1)),
+			y:    ValueOfFloat64(math.Inf(1)),
+			want: -1,
+		},
+		{
+			x:    ValueOfFloat64(math.Inf(1)),
+			y:    ValueOfFloat64(math.Inf(-1)),
+			want: 1,
+		},
+		{
+			x:    ValueOfBytes(nil),
+			y:    ValueOfBytes(nil),
+			want: 0,
+		},
+		{
+			x:    ValueOfBytes([]byte{}),
+			y:    ValueOfBytes(nil),
+			want: 0,
+		},
+		{
+			x:    ValueOfBytes(nil),
+			y:    ValueOfBytes([]byte{}),
+			want: 0, // Go's standard library and proto.Equal will treat them as equal.
+		},
+		{
+			x:    ValueOfString("a"),
+			y:    ValueOfString("b"),
+			want: -1,
+		},
+		{
+			x:    ValueOfString("b"),
+			y:    ValueOfString("a"),
+			want: 1,
+		},
+		{
+			x:    ValueOfBytes([]byte{1}),
+			y:    ValueOfBytes([]byte{2}),
+			want: -1,
+		},
+		{
+			x:    ValueOfBytes([]byte{2}),
+			y:    ValueOfBytes([]byte{1}),
+			want: 1,
+		},
+		{
+			x:    ValueOfEnum(1),
+			y:    ValueOfEnum(2),
+			want: -1,
+		},
+		{
+			x:    ValueOfEnum(2),
+			y:    ValueOfEnum(1),
+			want: 1,
+		},
+		{
+			x:    ValueOfBool(false),
+			y:    ValueOfInt32(0),
+			want: -1,
+		},
+		{
+			x:    ValueOfInt32(0),
+			y:    ValueOfBool(false),
+			want: 1,
+		},
+		{
+			x:    ValueOfBool(false),
+			y:    ValueOfMessage(fakeMessage),
+			want: -1,
+		},
+		{
+			x:    ValueOfMessage(fakeMessage),
+			y:    ValueOfBool(false),
+			want: 1,
+		},
+		{
+			x:    ValueOfMessage(fakeMessage),
+			y:    ValueOfList(fakeList),
+			want: 1,
+		},
+		{
+			x:    ValueOfList(fakeList),
+			y:    ValueOfMessage(fakeMessage),
+			want: -1,
+		},
+		{
+			x:    ValueOfMap(fakeMap),
+			y:    ValueOfList(fakeList),
+			want: 1,
+		},
+		{
+			x:    ValueOfList(fakeList),
+			y:    ValueOfMap(fakeMap),
+			want: -1,
+		},
+		{
+			x:    ValueOfMessage(fakeMessage),
+			y:    ValueOfMap(fakeMap),
+			want: 1,
+		},
+		{
+			x:    ValueOfMap(fakeMap),
+			y:    ValueOfMessage(fakeMessage),
+			want: -1,
+		},
+	}
+
+	for _, tt := range tests {
+		if got := tt.x.Compare(tt.y); got != tt.want {
+			t.Errorf("(%v).Compare(%v) = %v, want %v", tt.x, tt.y, got, tt.want)
+		}
+	}
+}
+
 func BenchmarkValue(b *testing.B) {
 	const testdata = "The quick brown fox jumped over the lazy dog."
 	var sink1 string
